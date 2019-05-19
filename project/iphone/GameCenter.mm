@@ -1,79 +1,51 @@
 #include <GameCenter.h>
-#import <UIKit/UIKit.h>
+
 #import <CoreFoundation/CoreFoundation.h>
 #import <GameKit/GameKit.h>
+#import <UIKit/UIKit.h>
+
 #define __STDC_FORMAT_MACROS // non needed in C, only in C++
 #include <inttypes.h>
 
 extern "C" void sendGameCenterEvent (const char* event, const char* data1, const char* data2, const char* data3, const char* data4);
 
-
 typedef void (*FunctionType)();
 
-
 @interface GKViewDelegate : NSObject <GKAchievementViewControllerDelegate,GKLeaderboardViewControllerDelegate> {}
-	
 	- (void)achievementViewControllerDidFinish:(GKAchievementViewController*)viewController;
 	- (void)leaderboardViewControllerDidFinish:(GKLeaderboardViewController*)viewController;
-	
-	@property (nonatomic) FunctionType onAchievementFinished;
-	@property (nonatomic) FunctionType onLeaderboardFinished;
-	
 @end
 
 
 @implementation GKViewDelegate
-	
-	@synthesize onAchievementFinished;
-	@synthesize onLeaderboardFinished;
-	
 	- (id)init {
-		
 		self = [super init];
 		return self;
-		
 	}
 	
 	- (void)dealloc {
-		
 		[super dealloc];
-		
 	}
 	
 	UIViewController *glView2;
 	
 	- (void)achievementViewControllerDidFinish:(GKAchievementViewController*)viewController {
-		
 		[viewController dismissModalViewControllerAnimated:YES];
 		[viewController.view.superview removeFromSuperview];
 		[viewController release];
-		onAchievementFinished ();
-		
 	}
 	
 	- (void)leaderboardViewControllerDidFinish:(GKLeaderboardViewController*)viewController {
-		
 		[viewController dismissModalViewControllerAnimated:YES];
 		[viewController.view.superview removeFromSuperview];
 		[viewController release];
-		onLeaderboardFinished ();
-		
 	}
-	
 @end
-
-
 
 namespace gamecenter {
 	
-	
 	static int isInitialized = 0;
 	GKViewDelegate* viewDelegate;
-	
-	//---
-	
-	
-	//User
 	
 	void initializeGameCenter ();
 	bool isGameCenterAvailable ();
@@ -83,32 +55,14 @@ namespace gamecenter {
 	const char* getPlayerName ();
 	const char* getPlayerID ();
 	void getPlayerFriends ();
-	
-	
-	//Leaderboards
-	
+
 	void showLeaderboard (const char* categoryID);
 	void reportScore (const char* categoryID, int score);
-	
-	
-	//Achievements
-	
+
 	void showAchievements ();
 	void resetAchievements ();
 	void reportAchievement (const char* achievementID, float percent, bool showCompletionBanner);
-	
-	
-	//Callbacks
-	
-	void registerForAuthenticationNotification ();
-	static void authenticationChanged (CFNotificationCenterRef center, void* observer, CFStringRef name, const void* object, CFDictionaryRef userInfo);
-	
-	void achievementViewDismissed ();
-	void leaderboardViewDismissed ();
-	
-	
-	//Events
-	
+
 	static const char* DISABLED = "disabled";
 	static const char* AUTH_SUCCESS = "authSuccess";
 	static const char* AUTH_ALREADY = "authAlready";
@@ -131,17 +85,7 @@ namespace gamecenter {
 	static const char* ON_GET_PLAYER_FRIENDS_SUCCESS = "onGetPlayerFriendsSuccess";
 	static const char* ON_GET_PLAYER_PHOTO_FAILURE = "onGetPlayerPhotoFailure";
 	static const char* ON_GET_PLAYER_PHOTO_SUCCESS = "onGetPlayerPhotoSuccess";
-	
-	//---
-	
-	
-	
-	
-	//USER
-	
-	
-	
-	
+
 	void initializeGameCenter () {
 		
 		if (isInitialized == 1) {
@@ -153,8 +97,6 @@ namespace gamecenter {
 		if (isGameCenterAvailable ()) {
 			
 			viewDelegate = [[GKViewDelegate alloc] init];
-			viewDelegate.onAchievementFinished = &achievementViewDismissed;
-			viewDelegate.onLeaderboardFinished = &leaderboardViewDismissed;
 			
 			isInitialized = 1;
 			authenticateLocalUser ();
@@ -163,29 +105,22 @@ namespace gamecenter {
 		
 	}
 	
-	
 	bool isGameCenterAvailable () {
-		
-		// check for presence of GKLocalPlayer API
-		Class gcClass = (NSClassFromString(@"GKLocalPlayer"));
-		
 		// check if the device is running iOS 4.1 or later  
 		NSString* reqSysVer = @"4.1";   
 		NSString* currSysVer = [[UIDevice currentDevice] systemVersion];   
 		BOOL osVersionSupported = ([currSysVer compare:reqSysVer options:NSNumericSearch] != NSOrderedAscending);   
 
 		NSLog(@"Game Center is available");
-		return (gcClass && osVersionSupported);
+		return (osVersionSupported);
 		
 	}
-	
 	
 	bool isUserAuthenticated () {
 		
 		return ([GKLocalPlayer localPlayer].isAuthenticated);
 		
 	}
-	
 	
 	void authenticateLocalUser () {
 		
@@ -201,50 +136,42 @@ namespace gamecenter {
 		
 		if ([GKLocalPlayer localPlayer].authenticated == NO) {
 			
-			GKLocalPlayer *localPlayer = [GKLocalPlayer localPlayer];
+			@try {
+			
+				NSLog(@"Will try to authenticate player");
+			
+				GKLocalPlayer *localPlayer = [GKLocalPlayer localPlayer];
 
-			[localPlayer setAuthenticateHandler:(^(UIViewController* viewcontroller, NSError *error) {
+				localPlayer.authenticateHandler = ^(UIViewController* viewcontroller, NSError *error) {
 				
-				if (localPlayer.isAuthenticated) {
+					if (localPlayer.isAuthenticated) {
 					
-					NSLog (@"Game Center: You are logged in to game center.");
-					registerForAuthenticationNotification();
+						NSLog (@"Game Center: You are logged in to game center.");
 
-					[localPlayer generateIdentityVerificationSignatureWithCompletionHandler:^(NSURL *publicKeyUrl, NSData *signature, NSData *salt, uint64_t timestamp, NSError *error)
-					{
-						if(error != nil) {
-						    // some sort of error, can't authenticate with url/signature/salt
-						    // but authentication did succeed according to GameCenter so report it
-						    sendGameCenterEvent (AUTH_SUCCESS, "", "", "", "");
-						    return;
-						}
-
-						NSString* urlString = [publicKeyUrl absoluteString];
-
-						char timestampBuf[256];
-                        snprintf(timestampBuf, sizeof timestampBuf, "%"PRIu64, timestamp);
-                        NSLog(@"SALT: %@", salt);
-
-						//[self verifyPlayer:localPlayer.playerID publicKeyUrl:publicKeyUrl signature:signature salt:salt timestamp:timestamp];
-						sendGameCenterEvent (AUTH_SUCCESS, [urlString UTF8String], [[signature base64EncodedStringWithOptions:0] UTF8String], [[salt base64EncodedStringWithOptions:0] UTF8String], timestampBuf);
-					}];
-
-				} else if (viewcontroller != nil) {
+					} else if (viewcontroller != nil) {
 					
-					NSLog (@"Game Center: User was not logged in. Show Login Screen.");
-					UIViewController *glView2 = [[[UIApplication sharedApplication] keyWindow] rootViewController];
-					[glView2 presentModalViewController: viewcontroller animated : NO];
+						NSLog (@"Game Center: User was not logged in. Show Login Screen.");
+						UIViewController *glView2 = [[[UIApplication sharedApplication] keyWindow] rootViewController];
+						[glView2 presentModalViewController: viewcontroller animated : NO];
 					
-				} else if (error != nil) {
+					} else if (error != nil) {
 					
-					NSLog (@"Game Center: Error occurred authenticating-");
-					NSLog (@"  %@", [error localizedDescription]);
-					NSString* errorDescription = [error localizedDescription];
-					sendGameCenterEvent (AUTH_FAILURE, [errorDescription UTF8String], "", "", "");
+						NSLog (@"Game Center: Error occurred authenticating-");
+						NSLog (@"  %@", [error localizedDescription]);
+						NSString* errorDescription = [error localizedDescription];
+						sendGameCenterEvent (AUTH_FAILURE, [errorDescription UTF8String], "", "", "");
 					
-				}
+					}
 				
-			})];
+				};
+				
+			}
+   		    @catch (NSException *exception){
+  		    	NSLog(@"authenticateLocalPlayer Caught an exception");
+  		  	}
+  			@finally {
+				NSLog(@"authenticateLocalPlayer Cleaning up");
+			}
 			
 		} else {
 			
@@ -254,7 +181,6 @@ namespace gamecenter {
 		}
 		
 	}
-	
 	
 	const char* getPlayerName () {
 		
@@ -271,7 +197,6 @@ namespace gamecenter {
 		}
 		
 	}
-	
 	
 	const char* getPlayerID () {
 		
@@ -350,8 +275,6 @@ namespace gamecenter {
 		[pool drain];
 	}
 	
-	//LEADERBOARDS
-
 	void showLeaderboard (const char* categoryID) {
 		
 		NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
@@ -373,7 +296,6 @@ namespace gamecenter {
 		[pool drain];
 		
 	}
-	
 	
 	void reportScore (const char* categoryID, int score) {
 		
@@ -433,10 +355,6 @@ namespace gamecenter {
 		[strLeaderboard release];	
 	}
 
-	//ACHIEVEMENTS
-		
-	
-	
 	void showAchievements () {
 		
 		NSLog(@"Game Center: Show Achievements");
@@ -453,7 +371,6 @@ namespace gamecenter {
 		}
 		
 	}
-	
 	
 	void resetAchievements () {
 		
@@ -474,13 +391,6 @@ namespace gamecenter {
 		
 	}
 	
-	
-	/*!
-	 * Reports changed in achievement completion.
-	 *
-	 * \param achievementID The Achievement ID.
-	 * \param percentComplete The range of legal values is between 0.0 and 100.0, inclusive.
-	 */
 	void reportAchievement (const char* achievementID, float percentComplete, bool showCompletionBanner) {
 		
 		NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
@@ -580,56 +490,5 @@ namespace gamecenter {
 			}
 		}];
 	}
-
-	//CALLBACKS
-	
-	
-	
-	void registerForAuthenticationNotification () {
-		
-		// TODO: need to REMOVE OBSERVER on dispose
-		CFNotificationCenterAddObserver (CFNotificationCenterGetLocalCenter (), NULL, &authenticationChanged, (CFStringRef)GKPlayerAuthenticationDidChangeNotificationName, NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
-		
-	}
-	
-	
-	void authenticationChanged (CFNotificationCenterRef center, void* observer, CFStringRef name, const void* object, CFDictionaryRef userInfo) {
-		
-		if (!isGameCenterAvailable ()) {
-			
-			NSLog (@"Game Center: is not available");
-			return;
-			
-		}
-		
-		if ([GKLocalPlayer localPlayer].isAuthenticated) {
-			
-			NSLog (@"Game Center: You are logged in to game center.");
-
-			sendGameCenterEvent (AUTH_SUCCESS, "", "", "", "");
-
-		} else {
-			
-			NSLog (@"Game Center: You are NOT logged in to game center.");
-			sendGameCenterEvent (AUTH_FAILURE, "", "", "", "");
-			
-		}
-		
-	}
-	
-	
-	void achievementViewDismissed () {
-		
-		//dispatchHaxeEvent(ACHIEVEMENTS_VIEW_CLOSED);
-		
-	}
-	
-	
-	void leaderboardViewDismissed () {
-		
-		//dispatchHaxeEvent(LEADERBOARD_VIEW_CLOSED);
-		
-	}
-	
 	
 }
