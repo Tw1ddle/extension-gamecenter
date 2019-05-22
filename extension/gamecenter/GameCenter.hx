@@ -44,6 +44,18 @@ class GameCenter {
 		
 	}
 	
+	public static function isAuthenticated ():Bool {
+	
+		initialize ();
+		
+		#if (ios || mac)
+		return gamecenter_isauthenticated();
+		#else
+		return false;
+		#end
+		
+	}
+	
 	
 	public static function dispatchEvent (event:Event):Bool {
 		
