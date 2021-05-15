@@ -14,7 +14,6 @@
 		
 		<compilerflag value="-IiPhone/include"/>
 		<compilerflag value="-Iinclude"/>
-        <compilerflag value="-mfpu=neon"/>
 		
 		<file name="iphone/GameCenter.mm"/>
 		

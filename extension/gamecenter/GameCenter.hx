@@ -111,26 +111,6 @@ class GameCenter {
 		#end
 		
 	}
-
-	public static function getPlayerFriends(){
-		
-		initialize();
-
-		#if (ios || mac)
-		gamecenter_playerfriends ();
-		#end
-
-	}
-
-	public static function getPlayerPhoto(playerID:String){
-
-		initialize();
-
-		#if (ios || mac)
-		gamecenter_playerphoto(playerID);
-		#end
-	}
-	
 	
 	private static function notifyListeners (inEvent:Dynamic) {
 		
@@ -271,8 +251,6 @@ class GameCenter {
 	private static var gamecenter_isauthenticated = cpp.Lib.load ("gamecenter", "gamecenter_isauthenticated", 0);
 	private static var gamecenter_playername = cpp.Lib.load ("gamecenter", "gamecenter_playername", 0);
 	private static var gamecenter_playerid = cpp.Lib.load ("gamecenter", "gamecenter_playerid", 0);
-	private static var gamecenter_playerfriends = cpp.Lib.load("gamecenter", "gamecenter_playerfriends", 0);
-	private static var gamecenter_playerphoto = cpp.Lib.load("gamecenter", "gamecenter_playerphoto", 1);
 	private static var gamecenter_showleaderboard = cpp.Lib.load ("gamecenter", "gamecenter_showleaderboard", 1);
 	private static var gamecenter_showachievements = cpp.Lib.load ("gamecenter", "gamecenter_showachievements", 0);
 	private static var gamecenter_reportscore = cpp.Lib.load ("gamecenter", "gamecenter_reportscore", 2);

@@ -23,11 +23,6 @@ class GameCenterEvent extends Event {
 	public static inline var ON_GET_ACHIEVEMENT_PROGRESS_SUCCESS = "onGetAchievementProgressSuccess";
 	public static inline var ON_GET_PLAYER_SCORE_FAILURE = "onGetPlayerScoreFailure";
 	public static inline var ON_GET_PLAYER_SCORE_SUCCESS = "onGetPlayerScoreSuccess";
-
-	public static inline var ON_GET_PLAYER_FRIENDS_FAILURE = "onGetPlayerFriendsFailure";
-	public static inline var ON_GET_PLAYER_FRIENDS_SUCCESS = "onGetPlayerFriendsSuccess";
-	public static inline var ON_GET_PLAYER_PHOTO_FAILURE = "onGetPlayerPhotoFailure";
-	public static inline var ON_GET_PLAYER_PHOTO_SUCCESS = "onGetPlayerPhotoSuccess";
 	
 	public var data1 : String;
 	public var data2 : String;

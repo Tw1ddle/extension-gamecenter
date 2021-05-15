@@ -6,18 +6,15 @@
 #define NEKO_COMPATIBLE
 #endif
 
-
 #include <hx/CFFI.h>
 #include <stdio.h>
 #include <hxcpp.h>
-#include "GameCenter.h"
 
+#include "GameCenter.h"
 
 using namespace gamecenter;
 
-
 AutoGCRoot* gameCenterEventHandle = 0;
-
 
 static value gamecenter_set_event_handle(value onEvent)
 {
@@ -91,25 +88,6 @@ static value gamecenter_playerid()
 	#endif
 }
 DEFINE_PRIM(gamecenter_playerid, 0);
-
-static value gamecenter_playerfriends()
-{
-	#if defined(IPHONE) || defined(HX_MACOS)
-	getPlayerFriends();
-	#endif
-	return alloc_null();
-}
-DEFINE_PRIM(gamecenter_playerfriends, 0);
-
-static value gamecenter_playerphoto(value playerID)
-{
-	#if defined(IPHONE) || defined(HX_MACOS)
-	getPhoto(val_string(playerID));
-	#endif
-	return alloc_null();
-}
-DEFINE_PRIM(gamecenter_playerphoto, 1);
-
 
 static value gamecenter_showachievements()
 {
