@@ -1,9 +1,5 @@
 #include <GameCenter.h>
 
-// Some transitive includes complain if these are not defined
-#define __ARM_NEON 1
-#define __ARM_NEON__ 1
-
 #import <CoreFoundation/CoreFoundation.h>
 #import <GameKit/GameKit.h>
 #import <UIKit/UIKit.h>
@@ -30,7 +26,7 @@ typedef void (*FunctionType)();
 		[super dealloc];
 	}
 	
-	UIViewController *glView2;
+	UIViewController *glView;
 	
 	- (void)achievementViewControllerDidFinish:(GKAchievementViewController*)viewController {
 		[viewController dismissModalViewControllerAnimated:YES];
@@ -120,39 +116,28 @@ namespace gamecenter {
 		if ([GKLocalPlayer localPlayer].authenticated == NO) {
 			
 			@try {
-			
 				NSLog(@"Will try to authenticate player");
 			
 				GKLocalPlayer *localPlayer = [GKLocalPlayer localPlayer];
 
 				localPlayer.authenticateHandler = ^(UIViewController* viewcontroller, NSError *error) {
-				
 					if (localPlayer.isAuthenticated) {
-					
 						NSLog (@"Game Center: You are logged in to game center.");
-
 					} else if (viewcontroller != nil) {
-					
 						NSLog (@"Game Center: User was not logged in. Show Login Screen.");
-						UIViewController *glView2 = [[[UIApplication sharedApplication] keyWindow] rootViewController];
-						[glView2 presentModalViewController: viewcontroller animated : NO];
+						UIViewController *glView = [[[UIApplication sharedApplication] keyWindow] rootViewController];
+						[glView presentModalViewController: viewcontroller animated : NO];
 					
 					} else if (error != nil) {
-					
 						NSLog (@"Game Center: Error occurred authenticating-");
 						NSLog (@"  %@", [error localizedDescription]);
 						NSString* errorDescription = [error localizedDescription];
 						sendGameCenterEvent (AUTH_FAILURE, [errorDescription UTF8String], "", "", "");
-					
 					}
-				
 				};
-				
-			}
-   		    @catch (NSException *exception){
+			} @catch (NSException *exception){
   		    	NSLog(@"authenticateLocalPlayer Caught an exception");
-  		  	}
-  			@finally {
+  		  	} @finally {
 				NSLog(@"authenticateLocalPlayer Cleaning up");
 			}
 		} else {
@@ -162,19 +147,12 @@ namespace gamecenter {
 	}
 	
 	const char* getPlayerName () {
-		
 		GKLocalPlayer* localPlayer = [GKLocalPlayer localPlayer];
-		
 		if (localPlayer.isAuthenticated) {
-			
 			return [localPlayer.alias cStringUsingEncoding:NSUTF8StringEncoding];
-			
 		} else {
-			
 			return NULL;
-			
 		}
-		
 	}
 	
 	const char* getPlayerID () {
@@ -195,8 +173,8 @@ namespace gamecenter {
 		if (leaderboardController != nil) {
 			leaderboardController.category = strCategory;
 			leaderboardController.leaderboardDelegate = viewDelegate;
-			UIViewController *glView2 = [[[UIApplication sharedApplication] keyWindow] rootViewController];
-			[glView2 presentModalViewController:leaderboardController animated: NO];
+			UIViewController *glView = [[[UIApplication sharedApplication] keyWindow] rootViewController];
+			[glView presentModalViewController:leaderboardController animated: NO];
 		}
 		
 		[strCategory release];
@@ -257,8 +235,8 @@ namespace gamecenter {
 		
 		if (achievements != nil) {
 			achievements.achievementDelegate = viewDelegate;
-			UIViewController *glView2 = [[[UIApplication sharedApplication] keyWindow] rootViewController];
-			[glView2 presentModalViewController: achievements animated: NO];
+			UIViewController *glView = [[[UIApplication sharedApplication] keyWindow] rootViewController];
+			[glView presentModalViewController: achievements animated: NO];
 		}
 	}
 	
