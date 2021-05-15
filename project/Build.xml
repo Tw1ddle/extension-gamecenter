@@ -9,23 +9,12 @@
 		<file name="common/ExternalInterface.cpp"/>
 		
 	</files>
-	
-	<files id="mac">
-		
-		<compilerflag value="-Imacos/include"/>
-		<compilerflag value="-Iinclude"/>
-
-		<flag value="-framework"/>
-		<flag value="Gamekit"/>
-		
-		<file name="mac/GameCenter.mm"/>
-		
-	</files>
 
 	<files id="iphone">
 		
 		<compilerflag value="-IiPhone/include"/>
 		<compilerflag value="-Iinclude"/>
+        <compilerflag value="-mfpu=neon"/>
 		
 		<file name="iphone/GameCenter.mm"/>
 		
@@ -39,7 +28,6 @@
 		
 		<files id="common"/>
 		<files id="iphone" if="iphone"/>
-		<files id="mac" if="mac"/>
 		
 	</target>
 	

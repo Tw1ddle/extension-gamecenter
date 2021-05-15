@@ -1,5 +1,9 @@
 #include <GameCenter.h>
 
+// Some transitive includes complain if these are not defined
+#define __ARM_NEON 1
+#define __ARM_NEON__ 1
+
 #import <CoreFoundation/CoreFoundation.h>
 #import <GameKit/GameKit.h>
 #import <UIKit/UIKit.h>
